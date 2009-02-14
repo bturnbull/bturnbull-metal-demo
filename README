@@ -1,0 +1,79 @@
+== Rails Metal Demonstration App
+
+This app suppliments my 19 February 2009 presentation to NH Ruby 
+(http://nhruby.org/) about Rack, Metal, and new features in Rails 2.3
+
+== Points of Interest
+
+app/metal/hello_metal.rb
+  Very simple Hello World endpoint that responds to /hello/metal
+
+app/controllers/hello_rails_controller.rb
+  Duplicate functionality to the above except using the Rails stack.  Responds
+  to /hello/rails
+
+app/metal/hello_sinatra.rb
+  Demonstrates any Rack application can be a Metal endpoint.  Responds to
+  /hello/sintra
+
+== Do It Yourself
+
+Here's what's needed to recreate this app from scratch.
+
+## Create stock app and freeze 2.3.0 
+rails metal
+cd metal
+rake rails:freeze:edge RELEASE=2.3.0
+rake rails:update
+
+## Generate Metal endpoint
+script/generate metal HelloMetal
+cat app/metal/hello_metal.rb
+  require(File.dirname(__FILE__) + "/../../config/environment") unless defined?(Rails)
+
+  class HelloMetal
+    def self.call(env)
+      if env["PATH_INFO"] =~ /^\/hello\/metal/
+        [200, {"Content-Type" => "text/plain"}, ["Hello, Metal!"]]
+      else
+        [404, {"Content-Type" => "text/html"}, ["Not Found"]]
+      end
+    end
+  end
+
+## Generate Rails controller
+script/generate controller HelloRails
+cat app/controllers/hello_rails_controller.rb
+  class HelloRailsController < ApplicationController
+    def show
+      headers['Content-Type'] = 'text/plain'
+      render :text => 'Hello, Rails!'
+    end
+  end
+
+## Update routes for Rails controller
+cat config/routes.rb
+  ActionController::Routing::Routes.draw do |map|
+    map.connect 'hello/rails', :controller => 'hello_rails', :action => 'show'
+  end
+
+## Create Sinatra app as Metal endpoint
+## See Josh Peek's notes at 
+##   http://github.com/rails/rails/commit/61a41154f7d50099da371e0d2f22fd25ab9113c2
+sudo gem install sinatra
+cat app/metal/hello_sinatra.rb
+  require 'sinatra'
+  Sinatra::Application.set(:run => false)
+  Sinatra::Application.set(:environment => :production)
+
+  HelloSinatra = Sinatra::Application.new unless defined? HelloSinatra
+  
+  get '/hello/sinatra' do
+    response['Content-Type'] = 'text/plain'
+    'Hello, Sinatra!'
+  end
+
+
+
+
+
