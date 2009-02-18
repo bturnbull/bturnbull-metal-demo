@@ -34,11 +34,17 @@ Rails::Initializer.run do |config|
   # config.plugins = [ :exception_notification, :ssl_requirement, :all ]
 
   # Add additional load paths for your own custom dirs
-  # config.load_paths += %W( #{RAILS_ROOT}/extras )
+  # config.load_paths += %W( #{RAILS_ROOT}/lib/middleware )
 
   # Force all environments to use the same logger level
   # (by default production uses :info, the others :debug)
   # config.log_level = :debug
+  
+  # Rack Middleware
+  require "#{RAILS_ROOT}/lib/middleware/django_middleware"
+  require "#{RAILS_ROOT}/lib/middleware/no_django_middleware"
+  config.middleware.use NoDjangoMiddleware
+  config.middleware.use DjangoMiddleware
 
   # Make Time.zone default to the specified zone, and make Active Record store time values
   # in the database in UTC, and return them converted to the specified local zone.
